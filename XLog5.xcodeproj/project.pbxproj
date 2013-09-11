@@ -13,7 +13,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		C13C7C3C17E01826003665EA /* XLog5.xcplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XLog5.xcplugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		C13C7C3C17E01826003665EA /* XLog5.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XLog5.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		C13C7C3F17E01826003665EA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		C13C7C4217E01826003665EA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		C13C7C4317E01826003665EA /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
@@ -49,7 +49,7 @@
 		C13C7C3D17E01826003665EA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C13C7C3C17E01826003665EA /* XLog5.xcplugin */,
+				C13C7C3C17E01826003665EA /* XLog5.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -103,6 +103,7 @@
 				C13C7C3817E01826003665EA /* Sources */,
 				C13C7C3917E01826003665EA /* Frameworks */,
 				C13C7C3A17E01826003665EA /* Resources */,
+				C13C7C6317E03F76003665EA /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -110,7 +111,7 @@
 			);
 			name = XLog5;
 			productName = XLog5;
-			productReference = C13C7C3C17E01826003665EA /* XLog5.xcplugin */;
+			productReference = C13C7C3C17E01826003665EA /* XLog5.bundle */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
@@ -149,6 +150,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		C13C7C6317E03F76003665EA /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "rm -rf ~/Library/Application\\ Support/Developer/Shared/Xcode/Plug-ins/XLog5.xcplugin\nmkdir -p ~/Library/Application\\ Support/Developer/Shared/Xcode/Plug-ins\necho $BUILT_PRODUCTS_DIR\ncp -r $BUILT_PRODUCTS_DIR/XLog5.bundle ~/Library/Application\\ Support/Developer/Shared/Xcode/Plug-ins/XLog5.xcplugin\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		C13C7C3817E01826003665EA /* Sources */ = {
@@ -252,9 +269,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "XLog5/XLog5-Prefix.pch";
 				INFOPLIST_FILE = "XLog5/XLog5-Info.plist";
-				INSTALL_PATH = "/Library/Application Support/Developer/Shared/Xcode/Plug-ins";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WRAPPER_EXTENSION = xcplugin;
 			};
 			name = Debug;
 		};
@@ -269,9 +284,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "XLog5/XLog5-Prefix.pch";
 				INFOPLIST_FILE = "XLog5/XLog5-Info.plist";
-				INSTALL_PATH = "/Library/Application Support/Developer/Shared/Xcode/Plug-ins";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WRAPPER_EXTENSION = xcplugin;
 			};
 			name = Release;
 		};
