@@ -34,8 +34,8 @@
 /** global variables **/
 static IMP originalFixAttributesInRange = nil;
 static XLog *XLogInstance = nil;    // used to handle click event
-static NSDictionary *defaultAttrs = nil;    // default console text attrs, used for reset()
-static NSDictionary *hiddenAttrs = nil;
+//static NSDictionary *defaultAttrs = nil;    // default console text attrs, used for reset()
+//static NSDictionary *hiddenAttrs = nil;
 
 // there are more than one projects opened at the same time, each one has a console. we need cache it.
 static NSMutableDictionary *consoleTextStorageMap = nil;    // <DVDFoldingTextStorage|DVTTextStorage *, XLog_Console *>
@@ -45,6 +45,10 @@ static NSMutableDictionary *consoleTextStorageMap = nil;    // <DVDFoldingTextSt
 const char *logfile = "log.txt";
 static FILE *logfp = 0;
 const long MAX_LOG_SIZE = 1000 * 1000;
+
+@interface XLog ()
+@property (strong, nonatomic) NSDictionary *defaultAttrs;
+@end
 
 
 @implementation XLog
@@ -71,8 +75,21 @@ const long MAX_LOG_SIZE = 1000 * 1000;
     // init map and set
     XLogInstance = [[XLog alloc] init];
     consoleTextStorageMap = [[NSMutableDictionary alloc] initWithCapacity:0];
-    hiddenAttrs = [NSDictionary dictionaryWithObjectsAndKeys:[NSFont systemFontOfSize:0.001f], NSFontAttributeName, [NSColor clearColor], NSForegroundColorAttributeName, nil];
+//    hiddenAttrs = [NSDictionary dictionaryWithObjectsAndKeys:[NSFont systemFontOfSize:0.001f], NSFontAttributeName, [NSColor clearColor], NSForegroundColorAttributeName, nil];
 
+}
+
++ (NSDictionary *)hiddenAttrs
+{
+    return @{
+             NSFontAttributeName: [NSFont systemFontOfSize:0.001f],
+             NSForegroundColorAttributeName: [NSColor clearColor]
+             };
+}
+
++ (NSDictionary *)defaultAttrs
+{
+    return XLogInstance.defaultAttrs;
 }
 
 - (void)onLogLevelButtonClick:(id)sender
@@ -142,15 +159,15 @@ const long MAX_LOG_SIZE = 1000 * 1000;
 
     XLog_Console *console = getConsole(self);
     if (console != nil && console.lastStrlen != [self length]) {   // this is a console textStorage and text changed
-        if (defaultAttrs == nil) {  // save default text attr at first time
-            defaultAttrs = [self attributesAtIndex:0 effectiveRange:NULL];
+        if (XLogInstance.defaultAttrs == nil) {  // save default text attr at first time
+            XLogInstance.defaultAttrs = [self attributesAtIndex:0 effectiveRange:NULL];
         }
         console.lastStrlen = [self length];
         parse(console, range);
     }
     
     // self is new, test it. Only need test DVTFoldingTextStorage
-    if (console == nil && [className isEqualToString:@"DVTFoldingTextStorage"]) {
+    if (console == nil && [className isEqualToString:@"DVTTextStorage"]) {
         testTextStorage(self);
     }
 }
@@ -254,6 +271,10 @@ BOOL testTextStorage(NSTextStorage *textStorage)
         }
     }
     
+    if (realTextStorage == nil) {
+        realTextStorage = textStorage;
+    }
+    
     XLog_Console *console = [[XLog_Console alloc] init];
     console.realTextStorage = realTextStorage;
     console.textView = textView;
@@ -329,14 +350,6 @@ NSString *hash(id obj)
     return [NSString stringWithFormat:@"%lx", (long)obj];
 }
 
-NSDictionary *getDefaultAttrs()
-{
-    if (defaultAttrs == nil) {
-        return [NSDictionary dictionary];
-    }
-    return defaultAttrs;
-}
-
 XLog_Console *getConsole(NSTextStorage *textStorage)
 {
     XLog_Console *console = [consoleTextStorageMap objectForKey:hash(textStorage)];
@@ -395,7 +408,7 @@ void hideLogTags(NSTextStorage *textStorage, NSRange range)
     NSArray *matches = [regex matchesInString:[textStorage string] options:0 range:range];
     
     for (NSTextCheckingResult *match in matches) {
-        [textStorage addAttributes:hiddenAttrs range:match.range];
+        [textStorage addAttributes:[XLog hiddenAttrs] range:match.range];
     }
 }
 
@@ -422,14 +435,14 @@ void applyColor(NSTextStorage *textStorage, NSRange range)
         }
         //-- set color attr
         // 1. hide color patten
-        [textStorage addAttributes:hiddenAttrs range:NSMakeRange(startRange.location + range.location, LENGTH_COLOR_PREX + LENGTH_COLOR)];
+        [textStorage addAttributes:[XLog hiddenAttrs] range:NSMakeRange(startRange.location + range.location, LENGTH_COLOR_PREX + LENGTH_COLOR)];
         
         // 2. set text color
         NSRange r = NSMakeRange(range.location + startRange.location + startRange.length, nextRange.location - startRange.location - startRange.length);
         // NSString *str = [[textStorage string] substringWithRange:r];
         if ([startColorStr isEqualToString:XLOG_COLOR_RESET]) {  // reset color
             // MXLog(@"reset color for text[%@]", str);
-            [textStorage addAttributes:getDefaultAttrs() range:r];
+            [textStorage addAttributes:[XLog defaultAttrs] range:r];
         } else {    // set customized color
             NSColor *color = string2color(startColorStr);
             // MXLog(@"set color[%@] for text[%@]", color, str);
@@ -461,13 +474,13 @@ void applyRegexFilter(NSTextStorage *textStorage, NSRange range)
     long loc = range.location;
     for (NSTextCheckingResult *match in matches) {
         NSRange r = NSMakeRange(loc, match.range.location - loc);
-        [textStorage addAttributes:hiddenAttrs range:r];
+        [textStorage addAttributes:[XLog hiddenAttrs] range:r];
         // next loc
         loc = match.range.location + match.range.length;
     }
     // hide loc to end
     NSRange r = NSMakeRange(loc, range.location + range.length - loc);
-    [textStorage addAttributes:hiddenAttrs range:r];
+    [textStorage addAttributes:[XLog hiddenAttrs] range:r];
 }
 
 void applyLogLevel(NSTextStorage *textStorage, NSRange range, NSString *tag)
@@ -484,7 +497,7 @@ void applyLogLevel(NSTextStorage *textStorage, NSRange range, NSString *tag)
     // hide head
     while (nextRange.length > 0) {
         NSRange r = NSMakeRange(range.location + startRange.location, nextRange.location - startRange.location + nextRange.length);
-        [textStorage addAttributes:hiddenAttrs range:r];
+        [textStorage addAttributes:[XLog hiddenAttrs] range:r];
         
         // find next one
         NSRange tmpR = NSMakeRange(nextRange.location + nextRange.length, len - nextRange.location - nextRange.length);
@@ -495,7 +508,7 @@ void applyLogLevel(NSTextStorage *textStorage, NSRange range, NSString *tag)
     }
     // hide tail
     NSRange r = NSMakeRange(range.location + startRange.location, len - startRange.location);
-    [textStorage addAttributes:hiddenAttrs range:r];
+    [textStorage addAttributes:[XLog hiddenAttrs] range:r];
 }
 
 void parse(XLog_Console *console, NSRange range)
@@ -538,7 +551,7 @@ void parse(XLog_Console *console, NSRange range)
 void reset(NSTextStorage *textStorage)
 {
     NSRange range = NSMakeRange(0, [textStorage length]);
-    [textStorage addAttributes:getDefaultAttrs() range:range];
+    [textStorage addAttributes:[XLog defaultAttrs] range:range];
 }
 
 // rewrite log to file
